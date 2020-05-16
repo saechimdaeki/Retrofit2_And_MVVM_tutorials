@@ -5,7 +5,13 @@ import androidx.recyclerview.widget.DefaultItemAnimator;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import android.app.SearchManager;
+import android.content.Context;
 import android.os.Bundle;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
+import androidx.appcompat.widget.SearchView;
 import android.widget.Toast;
 
 import java.util.ArrayList;
@@ -36,14 +42,20 @@ public class MainActivity extends AppCompatActivity {
         recyclerView.setItemAnimator(new DefaultItemAnimator());
         recyclerView.setNestedScrollingEnabled(false);
 
-        LoadJson();
+        LoadJson("");
 
 
     }
-    public void LoadJson(){
+    public void LoadJson(final String keyword){
         ApiInterface apiInterface= ApiClient.getApiClient().create(ApiInterface.class);
         String country=Utils.getCountry();
+        String language=Utils.getLanguage();
         Call<News> call;
+        if(keyword.length()>0){
+            call=apiInterface.getNewsSearch(keyword,language,"publishedAt",API_KEY);
+        }else{
+            call=apiInterface.getNews(country,API_KEY);
+        }
         call=apiInterface.getNews(country,API_KEY);
         call.enqueue(new Callback<News>() {
             @Override
@@ -66,5 +78,35 @@ public class MainActivity extends AppCompatActivity {
 
             }
         });
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        MenuInflater inflater=getMenuInflater();
+        inflater.inflate(R.menu.menu_main,menu);
+        SearchManager searchManager=(SearchManager)getSystemService(Context.SEARCH_SERVICE);
+        final SearchView searchView=(SearchView)menu.findItem(R.id.action_search).getActionView();
+        MenuItem searchmenuitem=menu.findItem(R.id.action_search);
+        searchView.setSearchableInfo(searchManager.getSearchableInfo(getComponentName()));
+        searchView.setQueryHint("Search Latest news...");
+        searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+            @Override
+            public boolean onQueryTextSubmit(String s) {
+                if(s.length()>2){
+                    LoadJson(s);
+                }
+                return false;
+            }
+
+            @Override
+            public boolean onQueryTextChange(String s) {
+                LoadJson(s);
+                return false;
+            }
+        });
+        searchmenuitem.getIcon().setVisible(false,false);
+
+
+        return true;
     }
 }
