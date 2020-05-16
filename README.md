@@ -1,4 +1,6 @@
- ## Retrofit2_tutorial
+ ## Retrofit2_tutorial Examples for studying retrofit2.
+ 
+ 
 [newsapi](https://newsapi.org/)
  ### newsapi.org simple json example   
     {
