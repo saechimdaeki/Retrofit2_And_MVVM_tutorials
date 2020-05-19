@@ -3,6 +3,7 @@ package retrofit.example.myapplication;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.os.Bundle;
+import android.util.Log;
 import android.widget.TextView;
 
 import com.google.gson.Gson;
@@ -12,6 +13,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import okhttp3.OkHttpClient;
+import okhttp3.logging.HttpLoggingInterceptor;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -19,6 +22,7 @@ import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 
 public class MainActivity extends AppCompatActivity {
+    private static final String TAG ="main" ;
     private TextView textViewResult;
     private JsonPlaceHoderApi jsonPlaceHoderApi;
     @Override
@@ -27,18 +31,25 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         textViewResult=findViewById(R.id.text_view_result);
         Gson gson=new GsonBuilder().serializeNulls().create();
+        HttpLoggingInterceptor loggingInterceptor=new HttpLoggingInterceptor();
+        loggingInterceptor.setLevel(HttpLoggingInterceptor.Level.BODY);
+        OkHttpClient okHttpClient=new OkHttpClient.Builder()
+                .addInterceptor(loggingInterceptor)
+                .build();
+
         Retrofit retrofit=new Retrofit.Builder()
                 .baseUrl("http://jsonplaceholder.typicode.com/")
                 .addConverterFactory(GsonConverterFactory.create(gson))
+                .client(okHttpClient)
                 .build();
 
          jsonPlaceHoderApi=retrofit.create(JsonPlaceHoderApi.class);
 
-       // getPosts();
-      //  getComments();
+      // getPosts();
+      // getComments();
        // createPost();
-        //updatePost();
-        deletePost();
+        updatePost();
+        //deletePost();
     }
     private void getPosts(){
         Map<String,String> parameters=new HashMap<>();
@@ -53,6 +64,7 @@ public class MainActivity extends AppCompatActivity {
                     textViewResult.setText("Code " +response.code());
                     return;
                 }
+                Log.d(TAG, "onResponse: ConfigurationListener::"+call.request().url());
                 List<Post> posts=response.body();
 
                 for(Post post:posts){
@@ -68,6 +80,8 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             public void onFailure(Call<List<Post>> call, Throwable t) {
+                Log.d(TAG, "onResponse: ConfigurationListener::"+call.request().url());
+
                 textViewResult.setText(t.getMessage());
             }
         });
@@ -81,7 +95,8 @@ public class MainActivity extends AppCompatActivity {
                     textViewResult.setText("Code: "+response.code());
                     return;
                 }
-                    List<Comment> comments=response.body();
+                Log.d(TAG, "onResponse: ConfigurationListener::"+call.request().url());
+                List<Comment> comments=response.body();
                 for(Comment comment:comments){
                     String content="";
                     content+="ID: "+comment.getId()+"\n";
